@@ -1,25 +1,2 @@
-# LLM APIs
-anthropic>=0.34.0
-openai>=1.0.0
-
-# Numerical and scientific computing
-numpy>=1.24.0
-scipy>=1.10.0
-
-# Visualization
-matplotlib>=3.7.0
-pygame>=2.5.0
-
-# Path planning
-scikit-learn>=1.3.0
-
-# Configuration and utilities
-pyyaml>=6.0
-python-dotenv>=1.0.0
-
-# Data handling
-pandas>=2.0.0
-
-# Testing
-pytest>=7.4.0
-pytest-asyncio>=0.21.0
+-r requirements/mapping.txt
+google-genai

@@ -1,0 +1,2 @@
+# Compatibility requirements entry point
+-r requirements/mapping.txt
