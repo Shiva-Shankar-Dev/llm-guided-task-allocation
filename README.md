@@ -50,3 +50,7 @@ CoppeliaSim must provide the ZMQ Remote API. Use only one robot controller at a 
 Two-robot navigation, persistent sessions, and reassignment have been tried live. Shared arrival slots and planning-margin recovery need further live verification. Five-to-ten-robot operation is future work; passing offline tests does not establish reliability for all scenes.
 
 See [documentation index](docs/README.md), [review rehearsal](docs/REVIEW_DEMO.md), [project checklist](docs/PROJECT_TODO.md), and [research design](docs/RESEARCH_DESIGN.md).
+
+## Five-robot setup
+
+Fleet cruising speed now defaults to 0.18 m/s. Follow [FIVE_ROBOTS.md](docs/FIVE_ROBOTS.md) to create a separate five-robot scene, run the short simultaneous-motion test, and launch a five-robot session. This configuration has offline integration coverage; live physics/localization and congested routes still need verification.

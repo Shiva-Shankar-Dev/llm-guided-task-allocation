@@ -16,5 +16,32 @@
     "wheel_radius": 0.0975,
     "track": 0.33,
     "clearance": 0.4
+  },
+  "Robot_C": {
+    "model_path": "/Robot_C",
+    "left_motor": "/Robot_C/leftMotor",
+    "right_motor": "/Robot_C/rightMotor",
+    "lidar_path": "/Robot_C/lidar",
+    "wheel_radius": 0.0975,
+    "track": 0.33,
+    "clearance": 0.4
+  },
+  "Robot_D": {
+    "model_path": "/Robot_D",
+    "left_motor": "/Robot_D/leftMotor",
+    "right_motor": "/Robot_D/rightMotor",
+    "lidar_path": "/Robot_D/lidar",
+    "wheel_radius": 0.0975,
+    "track": 0.33,
+    "clearance": 0.4
+  },
+  "Robot_E": {
+    "model_path": "/Robot_E",
+    "left_motor": "/Robot_E/leftMotor",
+    "right_motor": "/Robot_E/rightMotor",
+    "lidar_path": "/Robot_E/lidar",
+    "wheel_radius": 0.0975,
+    "track": 0.33,
+    "clearance": 0.4
   }
 }

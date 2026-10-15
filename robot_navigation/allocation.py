@@ -18,7 +18,7 @@ from .paths import DEFAULT_MAP, PROJECT_ROOT
 from .robot import DEFAULT_ROBOTS, load_robot, resolve_model
 
 
-from .stations import normalize_stations, canonical_instruction, canonical_intent, ARRIVAL_TOLERANCE
+from .stations import normalize_stations, canonical_instruction, canonical_intent, ARRIVAL_TOLERANCE, canonical_robots, robot_aliases
 
 
 INTENT_SCHEMA = {
@@ -46,10 +46,17 @@ def interpret(instruction, robot_names, stations, model, metrics=None):
         raise ValueError('Set GOOGLE_API_KEY (or GEMINI_API_KEY) in your environment; never put it in the mission')
     from google import genai
     from google.genai import types
-    instruction = canonical_instruction(instruction, stations)
+    instruction = canonical_robots(canonical_instruction(instruction, stations), robot_names)
     prompt = f'''Translate the user's instruction into navigation jobs, not motor commands.
 Available robot names: {json.dumps(list(robot_names))}
 Available station names: {json.dumps(list(stations))}
+Robot aliases: {json.dumps(robot_aliases(robot_names))}
+Home destinations: {json.dumps({n:n+'_home' for n in robot_names if n+'_home' in stations})}
+"Starting point", "initial position", "return home", and "go back to its start"
+mean the specified robot's own *_home destination. For all robots going home,
+create one explicitly assigned job per available robot with its own home.
+If no robot is specified for a home request, ask which robot; do not invent one.
+Each request is independent: no previous conversation is supplied.
 Configured synonyms in the user instruction have already been normalized to canonical station names.
 When asked to send both/all robots to a place, create a separate explicitly assigned job for each robot.
 Different robots may visit the same station; the allocator chooses distinct arrival slots.

@@ -117,10 +117,18 @@ Reference: [CoppeliaSim dynamic simulation guide](https://manual.coppeliarobotic
 
 ## Adjust cruising speed
 
-The default cruise speed is 0.12 m/s. To trial 0.18 m/s, exit the existing session and restart with CoppeliaSim stopped:
+The default cruise speed is now 0.18 m/s. To explicitly use 0.18 m/s, exit the existing session and restart with CoppeliaSim stopped:
 
 ```bash
 python3 main.py --model gemini-2.5-flash --speed 0.18
 ```
 
-This raises straight-line requested speed by 50%; uninterrupted travel time would fall by about one third. Turns, traffic waits, obstacle stops and computation still add time, so overall duration will not necessarily improve by that amount. Wheel limits, LiDAR stops, predicted motion checks and separation checks remain active. Margin recovery is still capped at 0.04 m/s. Speed is limited to at most 0.18 m/s in this prototype. Default 0.12 is unchanged; the faster setting requires a watched live trial. Console timestamps are simulation seconds, not necessarily elapsed wall-clock time.
+This raises straight-line requested speed by 50%; uninterrupted travel time would fall by about one third. Turns, traffic waits, obstacle stops and computation still add time, so overall duration will not necessarily improve by that amount. Wheel limits, LiDAR stops, predicted motion checks and separation checks remain active. Margin recovery is still capped at 0.04 m/s. Speed is limited to at most 0.18 m/s in this prototype. Use `--speed 0.12` for the previous setting; the faster setting requires a watched live trial. Console timestamps are simulation seconds, not necessarily elapsed wall-clock time.
+
+## Robot names, starting positions, and the LLM
+
+Robot 1–5 are now explicit aliases for Robot_A–Robot_E. The numbers remain stable if a robot becomes unavailable. "Charging" and "loading" are configured destination aliases. Thus `Robot 1 to charging and Robot 2 to loading` is normalized before interpretation.
+
+At each session launch, the controller captures each selected robot's initial XY position as `Robot_A_home`, etc. These are saved in `home_positions.json`, shown by `/stations`, and retained across batches. Try `Send Robot 1 to its starting point` or `Send all robots home`. This returns to the starting location within the normal arrival tolerance, not necessarily the initial heading. Starting the program again captures new home positions; they are not permanent docking coordinates. Occupancy and route checks still apply, so a home occupied by another robot cannot be forced through.
+
+The LLM receives the instruction, available robot names/aliases, station names, and robot-to-home associations. It does not receive the map image, grid, or coordinates, and each request is independent of previous dialogue. Python resolves names to configured world coordinates, uses A* on the inflated map to compare route distances and allocate work, and navigates with odometry/LiDAR feedback. `main.py` is only the launcher. `batch_*/intent.json` records interpreted jobs and `llm_usage.json` records the request/usage evidence. Offline `/intent` does not invoke the LLM. Unknown or ambiguous requests can still need clarification.

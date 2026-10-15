@@ -11,20 +11,37 @@ from .stations import normalize_stations
 
 
 class ConsoleSession:
-    def __init__(self, args):
+    def __init__(self, args, initial_states=None):
         self.args = args
         self.model = args.model or os.environ.get('GEMINI_MODEL')
         self.stations = json.loads(args.stations.read_text())
         if not isinstance(self.stations, dict) or not self.stations:
             raise ValueError('Stations must be a nonempty object')
         self.stations = normalize_stations(self.stations)
+        self.homes_registered = False
+        if initial_states is not None:
+            self.register_homes(initial_states)
         self.number = 0
         print('\nPersistent fleet session. Robots hold position between batches.')
         print('Type an instruction, /status, /stations, /intent FILE (offline), or /quit.')
         print('/quit or Ctrl+C ends the session and stops/resets the simulation.')
 
+    def register_homes(self, states):
+        if self.homes_registered:
+            return
+        for name, state in states.items():
+            home=name+'_home'
+            if home in self.stations:
+                raise ValueError(f'{home} is reserved for the session starting position')
+            self.stations[home]={'aliases': [name.replace('_',' ')+' home'],
+                                 'slots': {'home': state.pose[:2].tolist()}}
+        self.homes_registered=True
+        (self.args.output/'home_positions.json').write_text(json.dumps(
+            {name:self.stations[name+'_home']['slots']['home'] for name in states},indent=2)+'\n')
+
     def next_tasks(self, states, now):
         from .allocation import allocate, interpret
+        self.register_homes(states)
         poses = {name: [float(s.pose[0]), float(s.pose[1]), math.degrees(float(s.pose[2]))]
                  for name, s in states.items() if not s.unavailable}
         (self.args.output/'session_state.json').write_text(json.dumps({

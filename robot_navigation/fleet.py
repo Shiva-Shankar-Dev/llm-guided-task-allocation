@@ -158,7 +158,8 @@ class Agent:
     path_reason: str = ''
     unavailable: bool = False
     escaping_margin: bool = False
-    cruise_speed: float = .12
+    cruise_speed: float = .18
+    traffic_since: object = None
 
     def observe(self, sim, now, states):
         angles = np.array([sim.getJointPosition(h) for h in self.handles.motors])
@@ -332,8 +333,9 @@ def main(argv=None):
     parser.add_argument('--plan-only',action='store_true')
     parser.add_argument('--initialize-from-sim',action='store_true',help='read actual robot poses ONCE while stopped, then use wheels/LiDAR')
     parser.add_argument('--duration',type=float,default=300)
-    parser.add_argument('--speed',type=float,default=.12,help='cruise speed in m/s (0 < speed <= 0.18); turns and safety checks may reduce it')
+    parser.add_argument('--speed',type=float,default=.18,help='cruise speed in m/s (0 < speed <= 0.18); turns and safety checks may reduce it')
     parser.add_argument('--planning-margin',type=float,default=.2)
+    parser.add_argument('--traffic-timeout',type=float,default=90,help='maximum continuous known traffic wait before stopping for inspection')
     parser.add_argument('--stall-timeout',type=float,default=30,help='simulation seconds without position progress before reassignment')
     parser.add_argument('--max-reassignments',type=int,default=1,help='replacement attempts per task; 0 disables replacement')
     parser.add_argument('--simulate-stall',help='demo only: hold this mission robot stationary to test task replacement')
@@ -342,6 +344,8 @@ def main(argv=None):
         parser.error('--speed must be finite, positive, and no greater than 0.18 m/s')
     if not math.isfinite(args.duration) or args.duration<=0 or not math.isfinite(args.planning_margin) or args.planning_margin<0:
         parser.error('Duration must be positive and planning margin nonnegative')
+    if not math.isfinite(args.traffic_timeout) or args.traffic_timeout <= 0:
+        parser.error('traffic timeout must be finite and positive')
     if not math.isfinite(args.stall_timeout) or args.stall_timeout<=0 or args.max_reassignments<0:
         parser.error('stall timeout must be positive and reassignment limit nonnegative')
     if args.plan_only and args.initialize_from_sim:
@@ -397,7 +401,7 @@ def main(argv=None):
     session = None
     if args.interactive:
         from .session import ConsoleSession
-        session = ConsoleSession(args)
+        session = ConsoleSession(args, states)
     started,now = False,0.0
     batch_start=0.0
     failure = None
@@ -474,6 +478,17 @@ def main(argv=None):
                     state.active['diagnostic'] = {'estimated_pose':state.pose.tolist(),
                                                   'scan_score':float(state.score)}
                     journal.event(now,state.active,status,reason)
+                traffic_wait = status=='waiting' and (name in separation_reasons or reason.startswith('robot footprint blocks route'))
+                if traffic_wait:
+                    if state.traffic_since is None:
+                        state.traffic_since=now
+                    state.progress_time=now
+                    if now-state.traffic_since > args.traffic_timeout:
+                        raise RuntimeError(f'Traffic deadlock: {name} waited {args.traffic_timeout:g}s; {reason}. Robot not classified as failed hardware')
+                    continue
+                if state.traffic_since is not None:
+                    state.progress_time=now
+                    state.traffic_since=None
                 if name!=args.simulate_stall and np.linalg.norm(state.pose[:2]-state.progress_position)>.1:
                     state.progress_time=now
                     state.progress_position=state.pose[:2].copy()

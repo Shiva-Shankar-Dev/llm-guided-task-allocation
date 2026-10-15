@@ -212,3 +212,14 @@ First live natural-language interpretation succeeded: results/llm_first_trial co
 - [x] Add slow, bounded escape from extra planning margin, retaining base clearance and live safety checks.
 - [x] Record estimated pose/scan score on control status changes; 30 automated tests pass.
 - [ ] Repeat both-robots loading-dock scenario live and confirm separate arrivals without reassignment.
+
+### Five-robot expansion
+
+- [x] Set fleet/session default cruise to 0.18 m/s while preserving wheel and safety limits.
+- [x] Configure C/D/E and a short five-robot simultaneous mission.
+- [x] Add model-copy setup with scene backup and separate five-robot scene output.
+- [x] Add five loading arrival slots in a separate station profile.
+- [x] Distinguish known traffic waits from no-progress failure; bound traffic deadlock wait.
+- [x] Test actual controller with five concurrent kinematic robots and compare speeds.
+- [ ] Run setup/live smoke test: local simulator connection timed out during development.
+- [ ] Validate five-robot shared-destination navigation, recovery and wall-clock performance.

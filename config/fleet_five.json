@@ -1,0 +1,81 @@
+{
+  "robots": {
+    "Robot_A": {
+      "initial_pose": [
+        -1,
+        -0.8,
+        0
+      ]
+    },
+    "Robot_B": {
+      "initial_pose": [
+        0.5,
+        -0.8,
+        0
+      ]
+    },
+    "Robot_C": {
+      "initial_pose": [
+        -1,
+        0.8,
+        0
+      ]
+    },
+    "Robot_D": {
+      "initial_pose": [
+        0.5,
+        0.8,
+        0
+      ]
+    },
+    "Robot_E": {
+      "initial_pose": [
+        -1,
+        2.3,
+        0
+      ]
+    }
+  },
+  "tasks": [
+    {
+      "id": "Robot_A_smoke",
+      "robot": "Robot_A",
+      "goal": [
+        -0.4,
+        -0.8
+      ]
+    },
+    {
+      "id": "Robot_B_smoke",
+      "robot": "Robot_B",
+      "goal": [
+        1.1,
+        -0.8
+      ]
+    },
+    {
+      "id": "Robot_C_smoke",
+      "robot": "Robot_C",
+      "goal": [
+        -0.4,
+        0.8
+      ]
+    },
+    {
+      "id": "Robot_D_smoke",
+      "robot": "Robot_D",
+      "goal": [
+        1.1,
+        0.8
+      ]
+    },
+    {
+      "id": "Robot_E_smoke",
+      "robot": "Robot_E",
+      "goal": [
+        -0.4,
+        2.3
+      ]
+    }
+  ]
+}

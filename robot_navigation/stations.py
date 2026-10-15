@@ -46,3 +46,23 @@ def canonical_intent(intent, stations):
                 job['locations'] = [canonical_instruction(s, stations) if isinstance(s, str) else s
                                     for s in job['locations']]
     return result
+
+
+def robot_aliases(robot_names):
+    """Stable A=1 ... E=5, even when an earlier robot is unavailable."""
+    aliases = {}
+    for name in robot_names:
+        aliases[name.replace('_', ' ')] = name
+        if re.fullmatch(r'Robot_[A-Z]', name):
+            number = ord(name[-1])-ord('A')+1
+            aliases[f'Robot {number}'] = name
+            aliases[f'Robot_{number}'] = name
+    return aliases
+
+
+def canonical_robots(text, robot_names):
+    aliases = {a.casefold(): n for a,n in robot_aliases(robot_names).items()}
+    if not aliases:
+        return text
+    pattern = r'(?<!\w)(' + '|'.join(re.escape(a) for a in sorted(aliases, key=len, reverse=True)) + r')(?!\w)'
+    return re.sub(pattern, lambda m: aliases[m[0].casefold()], text, flags=re.IGNORECASE)

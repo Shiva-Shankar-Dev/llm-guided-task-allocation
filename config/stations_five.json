@@ -1,0 +1,65 @@
+{
+  "charging_station": {
+    "aliases": [
+      "charging area",
+      "charger",
+      "charging dock",
+      "charging"
+    ],
+    "slots": {
+      "charging_1": [
+        0.0,
+        5.0
+      ],
+      "charging_2": [
+        1.5,
+        5.0
+      ]
+    }
+  },
+  "loading_zone": {
+    "aliases": [
+      "loading dock",
+      "loading area",
+      "loading bay",
+      "loading"
+    ],
+    "slots": {
+      "loading_1": [
+        3.5,
+        4
+      ],
+      "loading_2": [
+        5,
+        4
+      ],
+      "loading_3": [
+        6.5,
+        4
+      ],
+      "loading_4": [
+        3.5,
+        5.5
+      ],
+      "loading_5": [
+        5,
+        5.5
+      ]
+    }
+  },
+  "left_corridor": {
+    "aliases": [
+      "left passage"
+    ],
+    "slots": {
+      "corridor_1": [
+        5.0,
+        0.0
+      ],
+      "corridor_2": [
+        6.5,
+        0.0
+      ]
+    }
+  }
+}
