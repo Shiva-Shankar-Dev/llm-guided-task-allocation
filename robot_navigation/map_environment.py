@@ -12,6 +12,7 @@ import time
 import tty
 
 import numpy as np
+from .robot import load_robot, resolve_lidar
 
 
 def decode_packet(packet):
@@ -169,7 +170,7 @@ def steering(scans, position, matrix, heading_offset):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--duration', type=float, default=180, help='simulation seconds')
-    parser.add_argument('--lidar', default='/Robot_A/fastHokuyo')
+    parser.add_argument('--lidar', default=None, help='scanner path; defaults to configured Robot A lidar')
     parser.add_argument('--output', type=Path, default=Path('results/mapping'))
     parser.add_argument('--size', type=float, default=30, help='map width in metres, centred on world zero')
     parser.add_argument('--resolution', type=float, default=0.05)
@@ -187,10 +188,11 @@ def main():
     sim = client.require('sim')
     robot = sim.getObject('/Robot_A')
     motors = [sim.getObject('/Robot_A/leftMotor'), sim.getObject('/Robot_A/rightMotor')]
-    lidar = sim.getObject(args.lidar)
+    config = load_robot()
+    lidar = sim.getObject(args.lidar) if args.lidar else resolve_lidar(sim, config)
     sensors = sim.getObjectsInTree(lidar, sim.object_visionsensor_type, 0)
     if len(sensors) != 2:
-        raise RuntimeError(f'Expected two fastHokuyo vision sensors under {args.lidar}; found {len(sensors)}.')
+        raise RuntimeError(f'Expected two fastHokuyo vision sensors under {args.lidar or config.lidar_path}; found {len(sensors)}.')
     if sim.getSimulationState() != sim.simulation_stopped:
         raise RuntimeError('Stop the simulation first, then run this script without main.py.')
     grid = Grid.load(args.resume) if args.resume else Grid(args.size, args.resolution)

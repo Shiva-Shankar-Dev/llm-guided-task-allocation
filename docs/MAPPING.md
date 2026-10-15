@@ -1,5 +1,7 @@
 # First map with Robot A
 
+For the complete current workflow and output locations, start with [WORKFLOW.md](WORKFLOW.md).
+
 This is a beginner mapping demo using your existing ZMQ connection. It needs no
 ROS, API key, or edits to the Hokuyo script. It reads the standard fastHokuyo
 vision-sensor coordinate packets, projects actual laser measurements into a
@@ -12,7 +14,7 @@ there is no pose estimation, scan matching, or loop closure yet.
    ```
 2. Open your scene in CoppeliaSim. Keep the simulation stopped. Do not run
    `robot_navigation/legacy_tasks.py` or another controller at the same time.
-3. Confirm the model path is `/Robot_A/fastHokuyo`. Keep its existing simulation
+3. Confirm the model path is `/Robot_A/lidar`. Keep its existing simulation
    and vision scripts enabled. Its scan plane should intersect the walls and
    boxes and clear the robot body. Rigid attachment alone does not verify this.
 4. From the project directory, first test scans with stationary wheels:
@@ -70,7 +72,7 @@ then watch a short drive before attempting longer exploration.
 Install the mapping/navigation dependencies:
 
 ```bash
-pip install -r requirements-mapping.txt
+pip install -r requirements/mapping.txt
 ```
 
 Open the same scene and stop simulation. Run this in a regular terminal with

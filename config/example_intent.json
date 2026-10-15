@@ -1,0 +1,7 @@
+{
+  "clarification": "",
+  "jobs": [
+    {"id": "visit_charging", "robot": null, "locations": ["charging_station"]},
+    {"id": "visit_loading", "robot": null, "locations": ["loading_zone"]}
+  ]
+}

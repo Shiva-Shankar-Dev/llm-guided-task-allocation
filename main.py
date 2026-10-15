@@ -1,5 +1,5 @@
-"""Compatibility entry point for the original language-task demo."""
-import runpy
+"""Main entry point: persistent natural-language fleet session."""
+from robot_navigation.session import main
 
-if __name__ == "__main__":
-    runpy.run_module("robot_navigation.legacy_tasks", run_name="__main__")
+if __name__ == '__main__':
+    main()

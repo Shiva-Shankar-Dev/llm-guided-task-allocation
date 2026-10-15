@@ -15,6 +15,7 @@ from scipy.ndimage import distance_transform_edt
 import yaml
 
 from .map_environment import Grid, read_scan, steering
+from .robot import DEFAULT_ROBOTS, RobotHandles, load_robot, wheel_speeds
 
 
 def wrap(a):
@@ -173,19 +174,28 @@ def motion_is_safe(map_, blocked, pose, velocity, omega, horizon=1.0):
 
 
 def main():
+    from .controller import follow_path
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--map', type=Path, default=DEFAULT_MAP)
+    p.add_argument('--robot', default='Robot_A', help='robot name from the configuration')
+    p.add_argument('--robots-config', type=Path, default=DEFAULT_ROBOTS)
     p.add_argument('--initial-pose', nargs=3, type=float, required=True, metavar=('X','Y','YAW_DEG'))
     p.add_argument('--goal', nargs=2, type=float, required=True, metavar=('X','Y'))
-    p.add_argument('--wheel-radius', type=float, default=0.0975)
-    p.add_argument('--track', type=float, default=0.33, help='distance between wheel centres, metres')
-    p.add_argument('--clearance', type=float, default=0.4, help='robot bounding radius plus margin, metres')
+    p.add_argument('--wheel-radius', type=float, default=None)
+    p.add_argument('--track', type=float, default=None, help='distance between wheel centres, metres')
+    p.add_argument('--clearance', type=float, default=None, help='robot bounding radius plus margin, metres')
     p.add_argument('--planning-margin', type=float, default=0.20, help='extra path clearance for tracking/localization error, metres')
     p.add_argument('--duration', type=float, default=300)
     p.add_argument('--plan-only', action='store_true', help='save planned path without connecting to simulator')
     p.add_argument('--slam', action='store_true', help='experimental: also extend occupancy map using estimated poses; no loop closure')
     p.add_argument('--output', type=Path, default=Path('results/navigation'))
     args = p.parse_args()
+    try:
+        config = load_robot(args.robot, args.robots_config, wheel_radius=args.wheel_radius,
+                            track=args.track, clearance=args.clearance)
+    except (ValueError, TypeError, OSError) as exc:
+        p.error(str(exc))
+    args.wheel_radius, args.track, args.clearance = config.wheel_radius, config.track, config.clearance
     if min(args.wheel_radius, args.track, args.clearance, args.duration) <= 0:
         p.error('wheel dimensions, clearance and duration must be positive')
     if args.planning_margin < 0:
@@ -199,23 +209,19 @@ def main():
     args.output.mkdir(parents=True, exist_ok=True)
     np.savetxt(args.output/'path.csv', [map_.xy(c) for c in path], delimiter=',', header='x,y', comments='')
     map_.preview(path, args.output/'path.png')
-    print(f'Planned {len(path)} cells. Path saved to {args.output}/path.csv')
+    print(f'{config.name}: planned {len(path)} cells. Path saved to {args.output}/path.csv')
     if args.plan_only:
         return
     from coppeliasim_zmqremoteapi_client import RemoteAPIClient
     client = RemoteAPIClient()
     sim = client.require('sim')
-    robot = sim.getObject('/Robot_A')
-    motors = [sim.getObject('/Robot_A/'+name) for name in ('leftMotor','rightMotor')]
-    sensors = sim.getObjectsInTree(sim.getObject('/Robot_A/fastHokuyo'), sim.object_visionsensor_type, 0)
-    if len(sensors) != 2:
-        raise RuntimeError('Expected two Hokuyo vision sensors')
+    handles = RobotHandles.resolve(sim, config)
+    robot, motors, sensors = handles.model, handles.motors, handles.sensors
     if sim.getSimulationState() != sim.simulation_stopped:
         raise RuntimeError('Stop simulation and other controllers first')
 
     def drive(v, omega):
-        speeds = np.array([v-omega*args.track/2, v+omega*args.track/2])/args.wheel_radius
-        speeds *= min(1, 2.0/max(float(np.max(np.abs(speeds))), 1e-6))
+        speeds = wheel_speeds(config, v, omega)
         for handle, speed in zip(motors, speeds):
             sim.setJointTargetVelocity(handle, float(speed))
 
@@ -235,11 +241,6 @@ def main():
     try:
         sim.setStepping(True)
         drive(0,0)
-        for name in ('leftMotor', 'rightMotor'):
-            try:
-                sim.setJointTargetVelocity(sim.getObject('/Robot_B/'+name), 0)
-            except Exception:
-                pass
         sim.startSimulation()
         started = True
         angles = np.array([sim.getJointPosition(h) for h in motors])
@@ -289,22 +290,7 @@ def main():
             current = map_.cell(pose[:2])
             if not map_.valid(current) or blocked[current]:
                 raise RuntimeError('Estimated robot pose is outside safe map space')
-            nearest = min(range(len(path)), key=lambda i: np.linalg.norm(map_.xy(path[i])-pose[:2]))
-            target = map_.xy(path[nearest])
-            for cell in path[nearest:]:
-                if np.linalg.norm(map_.xy(cell)-pose[:2]) > 0.25 or not visible(planning_blocked, current, cell):
-                    break
-                target = map_.xy(cell)
-            error = wrap(math.atan2(*(target-pose[:2])[::-1])-pose[2])
-            front, left, right = steering(scans, np.zeros(3), [1,0,0,0,0,1,0,0,0,0,1,0], 0)
-            omega = float(np.clip(2*error,-0.6,0.6))
-            velocity = 0 if abs(error)>0.4 else 0.12*max(0, math.cos(error))
-            if front < args.clearance+0.25:
-                velocity = 0
-            if min(front,left,right) < args.clearance:
-                velocity, omega = 0, 0
-            if velocity and not motion_is_safe(map_, planning_blocked, pose, velocity, omega):
-                velocity = 0  # Align toward the path before moving around a corner.
+            velocity, omega = follow_path(map_, planning_blocked, pose, path, scans)
             drive(velocity, omega)
             sim.step()
     except KeyboardInterrupt:

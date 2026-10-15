@@ -1,0 +1,20 @@
+{
+  "Robot_A": {
+    "model_path": "/Robot_A",
+    "left_motor": "/Robot_A/leftMotor",
+    "right_motor": "/Robot_A/rightMotor",
+    "lidar_path": "/Robot_A/lidar",
+    "wheel_radius": 0.0975,
+    "track": 0.33,
+    "clearance": 0.4
+  },
+  "Robot_B": {
+    "model_path": "/Robot_B",
+    "left_motor": "/Robot_B/leftMotor",
+    "right_motor": "/Robot_B/rightMotor",
+    "lidar_path": "/Robot_B/lidar",
+    "wheel_radius": 0.0975,
+    "track": 0.33,
+    "clearance": 0.4
+  }
+}
